@@ -13,9 +13,10 @@ defmodule Iserver.Application do
       # Start the PubSub system
       {Phoenix.PubSub, name: Iserver.PubSub},
       # Start the Endpoint (http/https)
-      IserverWeb.Endpoint
+      IserverWeb.Endpoint,
       # Start a worker by calling: Iserver.Worker.start_link(arg)
       # {Iserver.Worker, arg}
+      IserverWeb.Presence
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

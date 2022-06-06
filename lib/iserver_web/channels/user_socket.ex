@@ -10,7 +10,7 @@ defmodule IserverWeb.UserSocket do
   # Uncomment the following line to define a "room:*" topic
   # pointing to the `IserverWeb.RoomChannel`:
   #
-  # channel "room:*", IserverWeb.RoomChannel
+  channel "room:*", IserverWeb.RoomChannel
   #
   # To create a channel file, use the mix task:
   #
