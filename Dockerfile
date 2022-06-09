@@ -4,7 +4,7 @@ WORKDIR /app
 COPY . .
 
 RUN apk update
-RUN apk add inotify-tools
+RUN apk add inotify-tools git npm
 
 RUN mix do local.hex --force, local.rebar --force, deps.get
 
