@@ -12,7 +12,7 @@ defmodule IserverWeb.Endpoint do
 
   socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
 
-  socket("/socket", IserveoWeb.UserSocket,
+  socket("/socket", IserverWeb.UserSocket,
     websocket: true,
     longpoll: false
   )
