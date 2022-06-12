@@ -1,16 +1,15 @@
 defmodule IserverWeb.RoomChannel do
   use IserverWeb, :channel
-  alias Iserver.{Room, RoomSupervisor, User, UserSupervisor}
+  alias Iserver.{Comment, Room, RoomSupervisor, User, UserSupervisor}
 
   @impl true
   def join("room:" <> room_id, %{"id" => user_id, "name" => name}, socket) do
-    socket =
-      socket
-      |> get_or_create_room(room_id)
-      |> get_or_create_user(user_id, name, room_id)
-      |> update_room()
+    with {:ok, socket} <- socket |> get_or_create_room(room_id),
+         {:ok, socket} <- socket |> get_or_create_user(user_id, name, room_id),
+         {:ok, socket} <- socket |> update_room() do
 
-    {:ok, %{me: socket.assigns.me, room: socket.assigns.room}, socket}
+      {:ok, %{me: socket.assigns.me, room: socket.assigns.room}, socket}
+    end
   end
 
   @impl true
@@ -27,10 +26,11 @@ defmodule IserverWeb.RoomChannel do
 
   @impl true
   def handle_in("room", _, socket) do
-    socket =
+    with {:ok, socket} <-
       socket
-      |> update_room()
-    {:reply, {:ok, socket.assigns.room}, socket}
+      |> update_room() do
+      {:reply, {:ok, socket.assigns.room}, socket}
+    end
   end
 
   @impl true
@@ -70,36 +70,41 @@ defmodule IserverWeb.RoomChannel do
     {:noreply, socket}
   end
 
-  defp get_or_create_user(socket, user_id, name, room_id) do
-    with user_pid when not is_nil(user_pid) <- UserSupervisor.get(user_id) do
+  defp get_or_create_room(socket, room_id) do
+    with room_pid when not is_nil(room_pid) <- RoomSupervisor.get(room_id) do
+      {:ok,
       socket
-      |> assign(:me, user_pid |> User.get())
+      |> assign(:room, room_pid |> Room.get())}
     else
       _ ->
-        with {:ok, user_pid} <- UserSupervisor.add(%{name: name, room_id: room_id}) do
+        with {:ok, room_pid} <- RoomSupervisor.add(room_id) do
+          {:ok,
           socket
-          |> assign(:me, user_pid |> User.get())
+          |> assign(:room, room_pid |> Room.get())}
         end
     end
   end
 
-  defp get_or_create_room(socket, room_id) do
-    with room_pid when not is_nil(room_pid) <- RoomSupervisor.get(room_id) do
+  defp get_or_create_user(socket, user_id, name, room_id) do
+    with user_pid when not is_nil(user_pid) <- UserSupervisor.get(user_id) do
+      {:ok,
       socket
-      |> assign(:room, room_pid |> Room.get())
+      |> assign(:me, user_pid |> User.get())}
     else
       _ ->
-        with {:ok, room_pid} <- RoomSupervisor.add(room_id) do
+        with {:ok, user_pid} <- UserSupervisor.add(%{name: name, room_id: room_id}) do
+          {:ok,
           socket
-          |> assign(:room, room_pid |> Room.get())
+          |> assign(:me, user_pid |> User.get())}
         end
     end
   end
 
   defp update_room(socket = %{assigns: %{room: %{id: room_id}}}) do
     with room_pid when not is_nil(room_pid) <- RoomSupervisor.get(room_id) do
+      {:ok,
       socket
-      |> assign(:room, room_pid |> Room.get())
+      |> assign(:room, room_pid |> Room.get())}
     end
   end
 end
