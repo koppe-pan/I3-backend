@@ -33,8 +33,12 @@ defmodule IserverWeb.RoomChannel do
   end
 
   @impl true
-  def handle_in("close", _, socket = %{assigns: %{me: _me, room: _room}}) do
-    {:reply, socket}
+  def handle_in("close", _, socket = %{assigns: %{me: %User{id: user_id}}}) do
+    UserSupervisor.delete(user_id)
+    {:noreply,
+      socket
+      |> assign(me: nil)
+      |> assign(room: nil)}
   end
 
   defp get_or_create_user(socket, user_id, name, room_id) do
