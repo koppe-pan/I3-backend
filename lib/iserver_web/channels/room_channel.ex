@@ -33,26 +33,8 @@ defmodule IserverWeb.RoomChannel do
   end
 
   @impl true
-  def handle_in("close", _, socket = %{assigns: %{me: %User{id: user_id}}}) do
-    UserSupervisor.delete(user_id)
-    {:noreply,
-      socket
-      |> assign(me: nil)
-      |> assign(room: nil)}
-  end
-
-  intercept ["description", "ice"]
-
-  @impl true
-  def handle_out("description", payload = %{"destinationId" => destination_id}, socket = %{assigns: %{me: %User{id: user_id}}}) do
-    if destination_id == user_id, do: push(socket, "description", payload)
-    {:noreply, socket}
-  end
-
-  @impl true
-  def handle_out("ice", payload = %{"destinationId" => destination_id}, socket = %{assigns: %{me: %User{id: user_id}}}) do
-    if destination_id == user_id, do: push(socket, "ice", payload)
-    {:noreply, socket}
+  def handle_in("close", _, socket = %{assigns: %{me: _me, room: _room}}) do
+    {:reply, socket}
   end
 
   defp get_or_create_user(socket, user_id, name, room_id) do
@@ -61,7 +43,7 @@ defmodule IserverWeb.RoomChannel do
       |> assign(:me, user_pid |> User.get())
     else
       _ ->
-        with {:ok, user_pid} <- UserSupervisor.add(%{id: user_id, name: name, room_id: room_id}) do
+        with {:ok, user_pid} <- UserSupervisor.add(%{name: name, room_id: room_id}) do
           socket
           |> assign(:me, user_pid |> User.get())
         end

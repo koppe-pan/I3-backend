@@ -1,13 +1,19 @@
 defmodule Iserver.UserSupervisor do
   import DynamicSupervisor, only: [start_child: 2, which_children: 1, terminate_child: 2]
-  alias Iserver.{User}
+  alias Iserver.{ID, User}
 
   @server_mod Iserver.DynamicUserSupervisor
 
   # Client
 
-  def add(attrs) do
-    start_child(@server_mod, {User, attrs})
+  def add(params = %{name: name, room_id: room_id}) do
+    user_id = inspect(System.system_time(:nanosecond))
+              |> ID.sha256
+    if list() |> Enum.any?(fn %User{id: u_id} -> u_id == user_id end) do
+      add(params)
+    else
+      start_child(@server_mod, {User, %{id: user_id, name: name, room_id: room_id}})
+    end
   end
 
   def delete(pid) do

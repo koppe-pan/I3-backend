@@ -4,8 +4,6 @@ defmodule Iserver.User do
   @derive {Jason.Encoder, only: [:id, :name, :muted, :camera_on, :raising_hand, :volume]}
   defstruct id: "", name: "", muted: true, camera_on: false, raising_hand: false, volume: 100, room_id: "lobby"
 
-  alias Iserver.ID
-
   # Client
 
   def start_link(attrs) do
@@ -23,9 +21,7 @@ defmodule Iserver.User do
   # Server (callbacks)
 
   @impl true
-  def init(%{name: name, room_id: room_id}) do
-    id = inspect(System.system_time(:second))
-         |> ID.sha256
+  def init(%{id: id, name: name, room_id: room_id}) do
     {:ok, %__MODULE__{id: id, name: name, room_id: room_id}}
   end
 
