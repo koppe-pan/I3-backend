@@ -43,7 +43,7 @@ defmodule IserverWeb.RoomChannel do
       |> assign(:me, user_pid |> User.get())
     else
       _ ->
-        with {:ok, user_pid} <- UserSupervisor.add(%{id: user_id, name: name, room_id: room_id}) do
+        with {:ok, user_pid} <- UserSupervisor.add(%{name: name, room_id: room_id}) do
           socket
           |> assign(:me, user_pid |> User.get())
         end
