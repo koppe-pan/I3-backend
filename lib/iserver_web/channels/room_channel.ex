@@ -8,6 +8,7 @@ defmodule IserverWeb.RoomChannel do
       socket
       |> get_or_create_room(room_id)
       |> get_or_create_user(user_id, name, room_id)
+      |> update_room()
 
     {:ok, %{me: socket.assigns.me, room: socket.assigns.room}, socket}
   end
@@ -33,8 +34,40 @@ defmodule IserverWeb.RoomChannel do
   end
 
   @impl true
-  def handle_in("close", _, socket = %{assigns: %{me: _me, room: _room}}) do
-    {:reply, socket}
+  def handle_in("comment", content, socket = %{assigns: %{me: %User{id: user_id, room_id: room_id}}}) do
+    with room_pid when not is_nil(room_pid) <- RoomSupervisor.get(room_id) do
+      with {:ok, _} <- room_pid
+                       |> Room.comment(%{user_id: user_id, content: content}) do
+
+        socket =
+          socket
+          |> update_room()
+        {:reply, {:ok, socket.assigns.room.comments}, socket}
+      end
+    end
+  end
+
+  @impl true
+  def handle_in("close", _, socket = %{assigns: %{me: %User{id: user_id}}}) do
+    UserSupervisor.delete(user_id)
+    {:noreply,
+      socket
+      |> assign(me: nil)
+      |> assign(room: nil)}
+  end
+
+  intercept ["description", "ice"]
+
+  @impl true
+  def handle_out("description", payload = %{"destinationId" => destination_id}, socket = %{assigns: %{me: %User{id: user_id}}}) do
+    if destination_id == user_id, do: push(socket, "description", payload)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_out("ice", payload = %{"destinationId" => destination_id}, socket = %{assigns: %{me: %User{id: user_id}}}) do
+    if destination_id == user_id, do: push(socket, "ice", payload)
+    {:noreply, socket}
   end
 
   defp get_or_create_user(socket, user_id, name, room_id) do
