@@ -1,9 +1,8 @@
 defmodule Iserver.Room do
   use GenServer
-  alias Iserver.{User, UserSupervisor}
+  alias Iserver.{Comment, UserSupervisor}
 
-  @derive {Jason.Encoder, only: [:id]}
-  defstruct id: nil
+  defstruct id: nil, comments: []
 
   # Client
 
@@ -11,12 +10,8 @@ defmodule Iserver.Room do
     GenServer.start_link(__MODULE__, attrs)
   end
 
-  def add(pid, user) do
-    GenServer.call(pid, {:add, user})
-  end
-
-  def delete(pid, user) do
-    GenServer.call(pid, {:delete, user})
+  def comment(pid, c = %Comment{}) do
+    GenServer.call(pid, {:comment, c})
   end
 
   def active(pid, id) do
@@ -40,7 +35,13 @@ defmodule Iserver.Room do
   end
 
   @impl true
-  def handle_call(:get, _from, room = %__MODULE__{id: room_id}) do
-    {:reply, %{id: room_id, users: UserSupervisor.list_by_room_id(room_id)}, room}
+  def handle_call({:comment, c = %Comment{}}, _from, room = %__MODULE__{comments: comments}) do
+    updated_comments = [c | comments]
+    {:reply, updated_comments, %__MODULE__{room | comments: updated_comments}}
+  end
+
+  @impl true
+  def handle_call(:get, _from, room = %__MODULE__{id: room_id, comments: comments}) do
+    {:reply, %{id: room_id, comments: comments, users: UserSupervisor.list_by_room_id(room_id)}, room}
   end
 end
