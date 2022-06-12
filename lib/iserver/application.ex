@@ -16,7 +16,11 @@ defmodule Iserver.Application do
       IserverWeb.Endpoint,
       # Start a worker by calling: Iserver.Worker.start_link(arg)
       # {Iserver.Worker, arg}
-      IserverWeb.Presence
+      #{Iserver.Room, "lobby"},
+      {DynamicSupervisor,
+       strategy: :one_for_one, restart: :temporary, name: Iserver.DynamicRoomSupervisor},
+      {DynamicSupervisor,
+       strategy: :one_for_one, restart: :temporary, name: Iserver.DynamicUserSupervisor}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html
