@@ -41,6 +41,20 @@ defmodule IserverWeb.RoomChannel do
       |> assign(room: nil)}
   end
 
+  intercept ["description", "ice"]
+
+  @impl true
+  def handle_out("description", payload = %{"destinationId" => destination_id}, socket = %{assigns: %{me: %User{id: user_id}}}) do
+    if destination_id == user_id, do: push(socket, "description", payload)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_out("ice", payload = %{"destinationId" => destination_id}, socket = %{assigns: %{me: %User{id: user_id}}}) do
+    if destination_id == user_id, do: push(socket, "ice", payload)
+    {:noreply, socket}
+  end
+
   defp get_or_create_user(socket, user_id, name, room_id) do
     with user_pid when not is_nil(user_pid) <- UserSupervisor.get(user_id) do
       socket
