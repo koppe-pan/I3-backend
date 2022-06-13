@@ -2,14 +2,14 @@ defmodule Iserver.UserSupervisor do
   import DynamicSupervisor, only: [count_children: 1, start_child: 2, which_children: 1, terminate_child: 2]
   alias Iserver.{ID, User}
 
-  @maximum_user_for_room 4
+  @maximum_user_for_room 100000000
   @server_mod Iserver.DynamicUserSupervisor
 
   # Client
 
   def add(params = %{name: name, room_id: room_id}) do
     if count() >= @maximum_user_for_room do
-      {:error, "room capacity is 4"}
+      {:error, "room capacity is 100000000"}
     else
       user_id = inspect(System.system_time(:nanosecond))
                 |> ID.sha256
