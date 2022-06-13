@@ -70,6 +70,18 @@ defmodule IserverWeb.RoomChannel do
     {:noreply, socket}
   end
 
+  @impl true
+  def handle_out("description", payload, socket) do
+    push(socket, "description", payload)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_out("ice", payload, socket) do
+    push(socket, "ice", payload)
+    {:noreply, socket}
+  end
+
   defp get_or_create_room(socket, room_id) do
     with room_pid when not is_nil(room_pid) <- RoomSupervisor.get(room_id) do
       {:ok,
