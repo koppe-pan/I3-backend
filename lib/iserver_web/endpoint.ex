@@ -10,10 +10,8 @@ defmodule IserverWeb.Endpoint do
     signing_salt: "A7d6YWNd"
   ]
 
-  socket "/live", Phoenix.LiveView.Socket, websocket: [connect_info: [session: @session_options]]
-
   socket("/socket", IserverWeb.UserSocket,
-    websocket: true,
+    websocket: [timeout: 45_000],
     longpoll: false
   )
 
